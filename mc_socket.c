@@ -1,3 +1,5 @@
+#include "mc_socket.h"
+
 void
 setreuseaddr(mc_sock_fd fd) {
     int yes = 1;
@@ -69,9 +71,17 @@ handler_accept(int fd, short revent, void *args) {
 }
 
 void
-handler_read(int fd, short revent, void *args)
-{
+handler_read(int fd, short revent, void *args) {
     mc_setnonblocking(fd);
+    struct _connection *lc;
+    lc = (struct _connection *)args;
+    read(fd, lc->buf, 1024);
+    mc_event_set(&(lc->write), MC_EV_WRITE, lc->fd, handler_write, lc);
+}
+
+void
+handler_write(int fd, short revent, void *args) {
+    mc_set_nonblocking(fd);
     struct _connection *lc;
     lc = (struct _connection *)args;
     write(fd, lc->buf, 1024);

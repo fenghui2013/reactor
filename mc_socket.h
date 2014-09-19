@@ -1,3 +1,10 @@
+#ifndef _MC_SOCKET_H_
+#define _MC_SOCKET_H_
+
+#include <sys/socket.h>
+#include <sys/types.h>
+#include "mc_event.h"
+
 #define mc_sock_fd int
 
 #define DEFAULT_NET         AF_INET
@@ -14,7 +21,6 @@ struct _connection
     mc_event_base_t  *base;
 };
 
-
 void setreuseaddr(mc_sock_fd fd);
 int mc_socket();
 int mc_bind(mc_sock_fd listenfd);
@@ -23,3 +29,5 @@ void handler_accept(int fd, short revent, void *args);
 void handler_read(int fd, short revent, void *args);
 void handler_write(int fd, short revent, void *args);
 void cab(int fd, short revent, void *args);
+
+#endif

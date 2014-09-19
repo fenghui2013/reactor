@@ -1,3 +1,5 @@
+#include "mc_event.h"
+
 mc_event_base_t*
 mc_base_new(void) {
     mc_event_base_t *base = (mc_event_base_t *)malloc(sizeof(mc_event_base_t));
@@ -16,7 +18,7 @@ mc_base_new(void) {
     base->ev_base_stop = MC_BASE_STOP;
     
     gettimeofday(&base->event_time, NULL);
-    mc_evnet_init(base);
+    mc_event_init(base);
 
     return base;
 }
@@ -33,16 +35,12 @@ mc_event_set(mc_event_t *ev, short revent, int fd, mc_ev_callback callback, void
 #endif
     int err;
     memset(ev, 0, sizeof(mc_event_t));
-    ev->revent = revent;
-    ev->ev_fd = fd;
-    ev->callback = callback;
     ev->next = NULL;
     ev->prev = NULL;
-
-    if (args == NULL)
-        ev->args = NULL;
-    else
-        ev->args = args;
+    ev->callback = callback;
+    ev->ev_fd = fd;
+    ev->revent = revent;
+    ev->args = args;
 
     /* this job post to mc_event_post
     if (revent & MC_EV_LISTEN)
@@ -52,7 +50,7 @@ mc_event_set(mc_event_t *ev, short revent, int fd, mc_ev_callback callback, void
             fprintf(stderr, "mc_event_add in mc_event_set \n");
     }
     */
-#if
+#if (HAVE_EPOLL)
     if (revent & MC_EV_READ)
     {
         epoll_flag = EPOLLIN | EPOLLET;
@@ -165,22 +163,22 @@ mc_dispatch(mc_event_base_t *base) {
                 fprintf(stderr, "Unkonw err in file: %s, line: %d\n", __FILE__, __LINE__);
                 goto err1;
             }
+        }
 
-            retevent = (mc_event_t *)(base->active_list);
-            for (i = 0; i < nevnet; i++)
-            {
-                fprintf(stderr, "%d event(s)\n", nevent);
-                if (retevent == NULL)
-                    break;
-                retevent = get_event_and_del((mc_event_t *)(base->active_list));
-                /*if we want to reuse this event we should set event again*/
-                retevent->ev_flags = retevent->ev_flags & (~MC_EV_ACTIVE);
-                base->event_active_num--;
-                if (retevent == NULL)
-                    fprintf(stderr, "event is NULL file: %s, line: %d\n", __FILE__, __LINE__);
+        retevent = (mc_event_t *)(base->active_list);
+        for (i = 0; i < nevnet; i++)
+        {
+            fprintf(stderr, "%d event(s)\n", nevent);
+            if (retevent == NULL)
+                break;
+            retevent = get_event_and_del((mc_event_t *)(base->active_list));
+            /*if we want to reuse this event we should set event again*/
+            retevent->ev_flags = retevent->ev_flags & (~MC_EV_ACTIVE);
+            base->event_active_num--;
+            if (retevent == NULL)
+                fprintf(stderr, "event is NULL file: %s, line: %d\n", __FILE__, __LINE__);
 
-                retevent->callback(retevent->ev_fd, retevent->revent, retevent->args);
-            }
+            retevent->callback(retevent->ev_fd, retevent->revent, retevent->args);
         }
     }
     return 0;

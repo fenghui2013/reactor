@@ -1,3 +1,6 @@
+#include "mc_event.h"
+#include "mc_socket.h"
+
 int
 main() {
     mc_event_t mev;

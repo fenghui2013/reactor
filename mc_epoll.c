@@ -1,3 +1,13 @@
+#include "mc_epoll.h"
+
+mc_event_opt mc_event_op_val = {
+    mc_epoll_init,
+    mc_epoll_add,
+    mc_epoll_del,
+    mc_epoll_mod,
+    mc_epoll_loop
+};
+
 void*
 mc_epoll_init(mc_event_base_t *meb) {
     if (meb->magic != MC_BASE_MAGIC)
@@ -7,7 +17,7 @@ mc_epoll_init(mc_event_base_t *meb) {
     }
 
     meb->epoll_fd = epoll_create(MC_EVENT_MAX);
-    
+
     return meb;
 }
 
